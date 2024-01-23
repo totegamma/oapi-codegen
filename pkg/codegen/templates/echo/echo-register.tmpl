@@ -16,13 +16,24 @@ type EchoRouter interface {
 }
 
 type ServerOptions struct {
-    baseURL string
-    SecurityValidator func(echo.Context, string, []string) error
+	baseURL           string
+	SecurityValidator func(echo.Context, string, []string) error
 }
 
-// Registers handlers, and prepends BaseURL to the paths, so that the paths
-// can be served under a prefix.
-func RegisterHandlers(router EchoRouter, si ServerInterface, options ServerOptions) {
+var DefaultServerOptions = ServerOptions{
+    baseURL:           "",
+    SecurityValidator: func(ctx echo.Context, scope string, roles []string) error { return nil },
+}
+
+func RegisterHandlers(router EchoRouter, si ServerInterface) {
+    RegisterHandlersWithOptions(router, si, DefaultServerOptions)
+}
+
+func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options ServerOptions) {
+
+    if options.SecurityValidator == nil {
+        options.SecurityValidator = DefaultServerOptions.SecurityValidator
+    }
 
 {{if .}}
     wrapper := ServerInterfaceWrapper{
